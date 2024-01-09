@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const bcrypt = require('bcrypt');
-
+const Users = require('../models/users');
+const Signups = require('../models/signup');
 // Route to get all admins
 router.get('/admin', async (req, res) => {
   try {
@@ -25,7 +26,7 @@ router.post('/admin', async (req, res) => {
 
     // Insert the admin with the hashed password
     const [result] = await db.execute(
-      'INSERT INTO admin (name, username, password, role_id) VALUES (?, ?, ?, ?)',
+      'INSERT INTO admin (name, username, password, roleId) VALUES (?, ?, ?, ?)',
       [name, username, hashedPassword, role_id]
     );
 
@@ -33,7 +34,7 @@ router.post('/admin', async (req, res) => {
       id: result.insertId,
       name,
       username,
-      role_id,
+      roleId,
     });
   } catch (error) {
     console.error('Error executing query:', error);
@@ -64,19 +65,28 @@ router.put('/admin/:id', async (req, res) => {
 });
 
 // Route to delete an admin
-router.delete('/admin/:id', async (req, res) => {
+router.delete('/users/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const [result] = await db.execute('DELETE FROM admin WHERE id = ?', [id]);
-    if (result.affectedRows === 0) {
-      res.status(404).json({ error: 'Admin not found' });
+    const user = await Users.findByPk(id);
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
     } else {
-      res.json({ message: 'Admin deleted successfully' });
+      // Delete associated signups
+      await Signups.destroy({
+        where: { userId: id }
+      });
+
+      // Delete the user
+      await user.destroy();
+      res.json({ message: 'User and associated signups deleted successfully' });
     }
   } catch (error) {
-    console.error('Error executing query:', error);
+    console.error('Error deleting user:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 
 module.exports = router;

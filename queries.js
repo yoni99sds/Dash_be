@@ -1,6 +1,9 @@
-// queries.js
+const jwt = require('jsonwebtoken');
+const secretKey = process.env.JWT_SECRET; 
 const db = require('./db');
 const bcrypt = require('bcrypt');
+const Users = require('./models/users')
+const PromoCode = require('./models/PromoCode')
 const authenticateUserQuery = async (username, password) => {
   try {
     // Query to authenticate user, admin, or influencer
@@ -30,13 +33,13 @@ const authenticateUserQuery = async (username, password) => {
 
 
 
-const getUserRoleQuery = async (role_id) => {
+const getUserRoleQuery = async (id) => {
   try {
     // Query to get the user's role from the roles table
-    const [rows] = await db.execute('SELECT role_name FROM roles WHERE role_id = ?', [role_id]);
+    const [rows] = await db.execute('SELECT name FROM role WHERE id = ?', [id]);
 
     if (rows.length > 0) {
-      return rows[0].role_name;
+      return rows[0].name;
     }
 
     return null;
@@ -45,8 +48,22 @@ const getUserRoleQuery = async (role_id) => {
   }
 };
 
-module.exports = {
-  authenticateUserQuery,
-  getUserRoleQuery,
-  // Add more queries as needed
+
+
+
+
+const generateToken = (user) => {
+  // Generate JWT token with user's information
+  const token = jwt.sign({ id: user.id, username: user.username }, secretKey, { expiresIn: '1h' });
+  return token;
 };
+
+module.exports = {  authenticateUserQuery,
+  getUserRoleQuery,
+ 
+  generateToken,
+}
+
+
+
+

@@ -1,45 +1,53 @@
 const express = require('express');
-const db = require('../db');
-const bcrypt = require('bcrypt');
 const router = express.Router();
+const bcrypt = require('bcrypt');
+const Users  = require('../models/users'); 
+
 // Route to get all users
 router.get('/users', async (req, res) => {
   try {
-    const [rows, fields] = await db.execute('SELECT * FROM users');
-    res.json(rows);
+    const users = await Users.findAll();
+    res.json(users);
   } catch (error) {
-    console.error('Error executing query:', error);
+    console.error('Error fetching users:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
 // Route to add a new user
-router.post('/users', async (req, res) => {
-  try {
-    const { name, username, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password,10);
-    const role_id = 3;
-    const [result] = await db.execute('INSERT INTO users (name, username, password, role_id) VALUES (?, ?, ?,?)', [name, username, hashedPassword, role_id]);
-    res.json({ id: result.insertId, name, username, password, role_id });
-  } catch (error) {
-    console.error('Error executing query:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
+  router.post('/users', async (req, res) => {
+    try {
+      const { name, username, password } = req.body;
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const role_id = 3;
 
+      const newUser = await Users.create({
+        name,
+        username,
+        password: hashedPassword,
+        role_id,
+      });
 
-// Route to edit a user
+      res.json(newUser);
+    } catch (error) {
+      console.error('Error creating user:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
+
+// Route to get a specific user
 router.get('/users/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const [rows, fields] = await db.execute('SELECT * FROM users WHERE id = ?', [id]);
-    if (rows.length === 0) {
+    const user = await Users.findByPk(id);
+
+    if (!user) {
       res.status(404).json({ error: 'User not found' });
     } else {
-      res.json(rows[0]);
+      res.json(user);
     }
   } catch (error) {
-    console.error('Error executing query:', error);
+    console.error('Error fetching user:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
@@ -49,31 +57,40 @@ router.put('/users/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { name, username, password } = req.body;
-    const [result] = await db.execute('UPDATE users SET name = ?, username = ?, password = ? WHERE id = ?', [name, username, password, id]);
-    if (result.affectedRows === 0) {
+
+    const user = await Users.findByPk(id);
+
+    if (!user) {
       res.status(404).json({ error: 'User not found' });
     } else {
-      res.json({ id, name, username, password });
+      // Update user fields
+      user.name = name;
+      user.username = username;
+      user.password = await bcrypt.hash(password, 10);
+      await user.save();
+
+      res.json(user);
     }
   } catch (error) {
-    console.error('Error executing query:', error);
+    console.error('Error updating user:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
 
 // Route to delete a user
 router.delete('/users/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const [result] = await db.execute('DELETE FROM users WHERE id = ?', [id]);
-    if (result.affectedRows === 0) {
+    const user = await Users.findByPk(id);
+
+    if (!user) {
       res.status(404).json({ error: 'User not found' });
     } else {
+      await user.destroy();
       res.json({ message: 'User deleted successfully' });
     }
   } catch (error) {
-    console.error('Error executing query:', error);
+    console.error('Error deleting user:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

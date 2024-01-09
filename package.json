@@ -13,18 +13,24 @@
   "dependencies": {
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
+    "connect-flash": "^0.1.1",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
+    "crypto-js": "^3.1.9-1",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-session": "^1.17.3",
     "jsonwebtoken": "^9.0.2",
     "mysql": "^2.18.1",
-    "mysql2": "^3.6.3",
+    "mysql2": "^3.6.5",
     "passport": "^0.6.0",
     "passport-local": "^1.0.0",
-    "pg": "^8.11.3"
+    "pg": "^8.11.3",
+    "sequelize": "^6.35.1",
+    "util": "^0.12.5"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "sequelize-cli": "^6.6.2"
   }
 }

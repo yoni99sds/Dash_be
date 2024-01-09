@@ -1,0 +1,16 @@
+{
+    "development": {
+      "username": "root",
+      "password": "",
+      "database": "nexlink",
+      "host": "localhost",
+      "dialect": "mysql"
+    },
+    "test": {
+   
+    },
+    "production": {
+
+    }
+  }
+  
